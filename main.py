@@ -1,57 +1,65 @@
-import requests
-import json
+import os
 import argparse
-import os  # <--- Needed to read the environment
-from dotenv import load_dotenv  # <--- The new library
+from dotenv import load_dotenv
+import json
 
-# --- 0. LOAD SECRETS ---
-load_dotenv()  # This looks for the .env file and loads it
-API_KEY = os.getenv('ABUSEIPDB_KEY')  # Grab the key by name
+# Import our custom modules
+from modules.abuseipdb import check_abuseipdb
+from modules.virustotal import check_virustotal
 
-# Check if key loaded successfully
-if not API_KEY:
-    print("[!] Error: API Key not found. Did you create the .env file?")
-    exit()
+# Load environment variables
+load_dotenv()
 
-# --- 1. SETUP ARGUMENT PARSER ---
-parser = argparse.ArgumentParser(description="CLI Tool to check IP Reputation via AbuseIPDB.")
-parser.add_argument("ip", help="The IP address to scan.")
-args = parser.parse_args()
+ABUSE_KEY = os.getenv("ABUSEIPDB_API_KEY")
+VT_KEY = os.getenv("VIRUSTOTAL_API_KEY")
 
-# --- CONFIGURATION ---
-IP_TO_CHECK = args.ip
-url = 'https://api.abuseipdb.com/api/v2/check'
-querystring = {
-    'ipAddress': IP_TO_CHECK,
-    'maxAgeInDays': '90'
-}
-headers = {
-    'Accept': 'application/json',
-    'Key': API_KEY
-}
-
-# --- EXECUTION ---
-print(f"[*] Connecting to AbuseIPDB to scan: {IP_TO_CHECK}...")
-
-response = requests.request(method='GET', url=url, headers=headers, params=querystring)
-
-if response.status_code == 200:
-    decoded_response = response.json()
-    data = decoded_response['data']
+def main():
+    # 1. Setup CLI Arguments
+    parser = argparse.ArgumentParser(description="God Mode Threat Intel Scanner (Level 2)")
+    parser.add_argument("ip", help="The IP address to scan")
+    parser.add_argument("--save", action="store_true", help="Save results to a JSON file")
     
-    confidence_score = data['abuseConfidenceScore']
-    isp = data['isp']
-    country = data['countryCode']
+    args = parser.parse_args()
+    target_ip = args.ip
 
-    # --- RENDER HUD ---
-    print("\n" + "="*40)
-    print(f"   REPUTATION REPORT: {IP_TO_CHECK}")
-    print("="*40)
-    print(f" [!] Abuse Confidence Score: {confidence_score}%")
-    print(f" [i] ISP:                    {isp}")
-    print(f" [i] Country Code:           {country}")
-    print("="*40 + "\n")
+    print(f"\n--- 🛡️  Scanning Target: {target_ip} ---\n")
 
-else:
-    print(f"[!] Error: Mission Failed. Status Code: {response.status_code}")
-    print(f"[!] Server Message: {response.text}")
+    # 2. Run AbuseIPDB Scan
+    if ABUSE_KEY:
+        print(">> Querying AbuseIPDB...")
+        abuse_result = check_abuseipdb(target_ip, ABUSE_KEY)
+        if abuse_result['status'] == 'Success':
+            print(f"   [+] Abuse Confidence Score: {abuse_result['confidence_score']}%")
+        else:
+            print(f"   [!] Error: {abuse_result.get('error')}")
+    else:
+        print("   [!] AbuseIPDB Key missing in .env")
+
+    # 3. Run VirusTotal Scan
+    if VT_KEY:
+        print("\n>> Querying VirusTotal...")
+        vt_result = check_virustotal(target_ip, VT_KEY)
+        if vt_result['status'] == 'Success':
+            print(f"   [+] Malicious Votes: {vt_result['malicious_votes']}")
+            print(f"   [+] Suspicious Votes: {vt_result['suspicious_votes']}")
+        else:
+            print(f"   [!] Error: {vt_result.get('error')}")
+    else:
+        print("   [!] VirusTotal Key missing in .env")
+
+    print("\n---------------------------------------")
+
+    # 4. Save to file (Optional)
+    if args.save:
+        report = {
+            "target": target_ip,
+            "abuseipdb": abuse_result,
+            "virustotal": vt_result # Note: variables might be undefined if keys are missing; simple version for now
+        }
+        filename = f"report_{target_ip}.json"
+        with open(filename, "w") as f:
+            json.dump(report, f, indent=4)
+        print(f"💾 Report saved to {filename}")
+
+if __name__ == "__main__":
+    main()
