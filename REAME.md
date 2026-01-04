@@ -53,7 +53,7 @@ This tool aggregates data from **4 industry-standard APIs** into a single Unifie
     ```
 
 ## 📸 Screenshots
-![App Screenshot](/images/Screenshot demo.png)
+![App Screenshot](/images/Screenshot_demo.png)
 
 ---
 *Developed by Ziyi
