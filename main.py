@@ -6,14 +6,16 @@ import json
 # --- 1. IMPORTS FIXED ---
 from modules.abuseipdb import check_abuseipdb
 from modules.virustotal import check_virustotal
-from modules.urlscan import scan_url  # <--- Added this!
+from modules.urlscan import scan_url  
+from modules.shodan import get_shodan_info  
 
 # Load environment variables
 load_dotenv()
 
 ABUSE_KEY = os.getenv("ABUSEIPDB_API_KEY")
 VT_KEY = os.getenv("VIRUSTOTAL_API_KEY")
-URLSCAN_KEY = os.getenv("URLSCAN_API_KEY") # <--- Added this!
+URLSCAN_KEY = os.getenv("URLSCAN_API_KEY") 
+SHODAN_KEY = os.getenv("SHODAN_API_KEY")
 
 def main():
     # Initialize variables to None so the script doesn't crash if we skip a step
@@ -70,6 +72,21 @@ def main():
             print(f"   [!] Error: {urlscan_result.get('error')}")
     else:
         print("   [!] urlscan.io Key missing in .env")
+
+    # --- RUN SHODAN ---
+    shodan_result = None # Initialize
+    if SHODAN_KEY:
+        print("\n>> Querying Shodan (Infrastructure)...")
+        shodan_result = get_shodan_info(target_ip, SHODAN_KEY)
+        
+        if shodan_result['status'] == 'Success':
+            print(f"   [+] OS: {shodan_result['os']}")
+            print(f"   [+] ISP: {shodan_result['isp']}")
+            print(f"   [+] Open Ports: {shodan_result['ports']}")
+        else:
+            print(f"   [!] Status: {shodan_result.get('error')}")
+    else:
+        print("   [!] Shodan Key missing")
         
     # --- SAVE REPORT ---
     if args.save:
@@ -77,7 +94,8 @@ def main():
             "target": target_ip,
             "abuseipdb": abuse_result,
             "virustotal": vt_result,
-            "urlscan": urlscan_result
+            "urlscan": urlscan_result,
+            "shodan": shodan_result
         }
         filename = f"report_{target_ip}.json"
         with open(filename, "w") as f:

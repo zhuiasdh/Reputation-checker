@@ -1,94 +1,59 @@
-# 🛡️ Reputation Checker
+# 🛡️ Threat Intelligence Reputation Checker
 
-A Python CLI tool to check the reputation of IP addresses using the AbuseIPDB API. Designed to help security analysts quickly validate suspicious IPs directly from the terminal.
+A unified, automated threat intelligence dashboard designed to accelerate Incident Response (IR) and SOC analysis.
 
-## 🚀 Features
+![Status](https://img.shields.io/badge/Status-Operational-success)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-Enterprise_UI-red)
 
-* **Real-time Intelligence:** Connects to AbuseIPDB V2 API.
-* **Clean Output:** Parses JSON into a readable CLI report.
-* **Secure:** Uses environment variables to protect API keys.
-* **Lightweight:** Built with Python and `requests`.
+## 🎯 The Problem
+Security Analysts often spend valuable time tab-switching between multiple intelligence sources (VirusTotal, AbuseIPDB, Shodan, urlscan.io) to investigate a single IOC (Indicator of Compromise).
 
-## 🛠️ Installation
+## 💡 The Solution
+This tool aggregates data from **4 industry-standard APIs** into a single Unified dashboard, providing a comprehensive risk profile in under 30 seconds.
 
-1.  **Clone the repository:**
+## ✨ Key Features
+- **🌐 Unified Reputation Analysis:** Cross-references AbuseIPDB confidence scores with VirusTotal voting consensus.
+- **🏗️ Infrastructure Recon:** Integrates **Shodan** to identify host OS, ISP, and open ports (SSH, RDP, HTTP, etc.).
+- **📸 Visual Forensics:** Automated headless browser scanning via **urlscan.io** to capture safe screenshots of potential phishing sites.
+- **📊 Executive Dashboard:** A Streamlit-based UI with a custom "Dark Purple" theme, separating high-level metrics from raw JSON artifacts.
+- **🧩 Modular Architecture:** Codebase is refactored into independent modules for scalability and easy maintenance.
+
+## 🛠️ Tech Stack
+* **Language:** Python
+* **Frontend:** Streamlit (Custom CSS styling)
+* **Networking:** `requests` library
+* **Security:** Environment variable management (`python-dotenv`)
+
+## 🚀 Installation & Setup
+
+1.  **Clone the Repository**
     ```bash
-    git clone [https://github.com/YOUR_USERNAME/reputation-checker.git](https://github.com/YOUR_USERNAME/reputation-checker.git)
+    git clone [https://github.com/zhuiasdh/Reputation-checker](https://github.com/zhuiasdh/Reputation-checker)
     cd reputation-checker
     ```
 
-2.  **Install dependencies:**
+2.  **Install Dependencies**
     ```bash
     pip install -r requirements.txt
     ```
 
-3.  **Configuration:**
-    * Create a free account at [AbuseIPDB](https://www.abuseipdb.com/) and get your API Key.
-    * Create a file named `.env` in the project root.
-    * Add your key to the file:
-        ```text
-        ABUSEIPDB_KEY=your_actual_api_key_here
-        ```
+3.  **API Configuration**
+    Create a `.env` file in the root directory and add your keys:
+    ```env
+    ABUSEIPDB_API_KEY="your_key"
+    VIRUSTOTAL_API_KEY="your_key"
+    URLSCAN_API_KEY="your_key"
+    SHODAN_API_KEY="your_key"
+    ```
 
-## 🎮 Usage
+4.  **Launch the Dashboard**
+    ```bash
+    streamlit run app.py
+    ```
 
-Run the script with an IP address as an argument:
-
-```bash
-python main.py 1.1.1.1
-
-Example Output:
-
-Plaintext
-
-========================================
-   REPUTATION REPORT: 1.1.1.1
-========================================
- [!] Abuse Confidence Score: 0%
- [i] ISP:                    Cloudflare, Inc.
- [i] Country Code:           AU
-========================================
-🤝 Contributing
-Feel free to open issues or submit pull requests!
-
+## 📸 Screenshots
+![App Screenshot](/images/Screenshot demo.png)
 
 ---
-
-### 💾 Save and Publish
-
-You know the drill. We just created a new file, so we have to ship it to the mothership.
-
-1.  **Save the file** in VS Code.
-2.  **Stage it:**
-    ```bash
-    git add README.md
-    ```
-3.  **Commit it:**
-    ```bash
-    git commit -m "docs: add project readme"
-    ```
-4.  **Push it:**
-    ```bash
-    git push
-    ```
-
-### 🏆 Quest Rewards
-
-* **Achievement Unlocked:** "Open Source Contributor" (Badge ready).
-* **Portfolio Value:** +50% (Recruiters love documentation).
-* **Current Level:** 26 -> **27 (Level Up!)**
-
----
-
-### 🔮 The Future
-
-You now have a complete, professional v1.0 project.
-You can technically stop here and put this on your resume.
-
-However, if you want to push your skills further, we have options for **Phase 7**:
-
-* **Option A (Engineering):** Add error handling (e.g., What if the user types "banana" instead of an IP?).
-* **Option B (Usability):** Make the script runnable from *anywhere* in your terminal (turning it into a global command), not just inside the folder.
-* **Option C (Expansion):** Check a list of IPs from a text file (Bulk Scanning).
-
-**What is your command?**
+*Developed by Ziyi
