@@ -3,19 +3,26 @@ import argparse
 from dotenv import load_dotenv
 import json
 
-# Import our custom modules
+# --- 1. IMPORTS FIXED ---
 from modules.abuseipdb import check_abuseipdb
 from modules.virustotal import check_virustotal
+from modules.urlscan import scan_url  # <--- Added this!
 
 # Load environment variables
 load_dotenv()
 
 ABUSE_KEY = os.getenv("ABUSEIPDB_API_KEY")
 VT_KEY = os.getenv("VIRUSTOTAL_API_KEY")
+URLSCAN_KEY = os.getenv("URLSCAN_API_KEY") # <--- Added this!
 
 def main():
-    # 1. Setup CLI Arguments
-    parser = argparse.ArgumentParser(description="God Mode Threat Intel Scanner (Level 2)")
+    # Initialize variables to None so the script doesn't crash if we skip a step
+    abuse_result = None
+    vt_result = None
+    urlscan_result = None
+
+    # Setup CLI Arguments
+    parser = argparse.ArgumentParser(description="God Mode Threat Intel Scanner (Level 3)")
     parser.add_argument("ip", help="The IP address to scan")
     parser.add_argument("--save", action="store_true", help="Save results to a JSON file")
     
@@ -24,7 +31,7 @@ def main():
 
     print(f"\n--- 🛡️  Scanning Target: {target_ip} ---\n")
 
-    # 2. Run AbuseIPDB Scan
+    # --- RUN ABUSEIPDB ---
     if ABUSE_KEY:
         print(">> Querying AbuseIPDB...")
         abuse_result = check_abuseipdb(target_ip, ABUSE_KEY)
@@ -35,7 +42,7 @@ def main():
     else:
         print("   [!] AbuseIPDB Key missing in .env")
 
-    # 3. Run VirusTotal Scan
+    # --- RUN VIRUSTOTAL ---
     if VT_KEY:
         print("\n>> Querying VirusTotal...")
         vt_result = check_virustotal(target_ip, VT_KEY)
@@ -49,17 +56,33 @@ def main():
 
     print("\n---------------------------------------")
 
-    # 4. Save to file (Optional)
+    # --- RUN URLSCAN.IO ---
+    if URLSCAN_KEY:
+        print("\n>> Launching urlscan.io Scanner...")
+        urlscan_result = scan_url(target_ip, URLSCAN_KEY)
+        
+        if urlscan_result['status'] == 'Success':
+            print(f"   [+] Report Link: {urlscan_result['report_url']}")
+            print(f"   [+] Page Title:  {urlscan_result['page_title']}")
+            print(f"   [+] Actual URL:  {urlscan_result['page_url']}")
+            print(f"   [📸] Screenshot:  {urlscan_result['screenshot_saved_as']}")
+        else:
+            print(f"   [!] Error: {urlscan_result.get('error')}")
+    else:
+        print("   [!] urlscan.io Key missing in .env")
+        
+    # --- SAVE REPORT ---
     if args.save:
         report = {
             "target": target_ip,
             "abuseipdb": abuse_result,
-            "virustotal": vt_result # Note: variables might be undefined if keys are missing; simple version for now
+            "virustotal": vt_result,
+            "urlscan": urlscan_result
         }
         filename = f"report_{target_ip}.json"
         with open(filename, "w") as f:
             json.dump(report, f, indent=4)
-        print(f"💾 Report saved to {filename}")
+        print(f"\n💾 Report saved to {filename}")
 
 if __name__ == "__main__":
     main()
